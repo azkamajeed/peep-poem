@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peep Poems</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=IM+Fell+English:ital@0;1&family=Playfair+Display:ital,wght@0,400;1,400&family=Lora:ital,wght@0,400;1,400&family=Crimson+Pro:ital,wght@0,300;1,300&family=Libre+Baskerville:ital@0;1&family=DM+Serif+Display:ital@0;1&family=Gilda+Display&family=Petit+Formal+Script&family=Della+Respira&family=Source+Serif+4:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
+
+</head>
+<body>
+
+<div id="app">
+
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">Peep Poems</div>
+      <div class="logo-sub">your little poem shelf</div>
+    </div>
+
+    <button class="btn-new" onclick="newPoem()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Poem
+    </button>
+
+    <div class="search-wrap" style="padding-top:14px">
+      <svg class="search-icon" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" id="search-input" placeholder="search poems…" oninput="filterPoems(this.value)">
+    </div>
+
+    <div class="poem-count" id="poem-count">0 poems</div>
+    <div id="poem-list"></div>
+  </aside>
+
+  <main id="main">
+
+    <div id="welcome">
+      <div class="welcome-card">
+        <div class="big-logo">Peep Poems</div>
+        <p>pick a poem or write something new</p>
+      </div>
+    </div>
+
+   
+    <div id="editor-pane">
+      <div class="toolbar">
+        <input class="toolbar-title-input" id="title-input" placeholder="untitled poem…" spellcheck="false">
+        <select class="font-select" id="font-select" onchange="updateEditorFont()">
+          <option value="'Cormorant Garamond', serif">Cormorant Garamond</option>
+          <option value="'IM Fell English', serif">IM Fell English</option>
+          <option value="'Playfair Display', serif">Playfair Display</option>
+          <option value="'Lora', serif">Lora</option>
+          <option value="'Crimson Pro', serif">Crimson Pro</option>
+          <option value="'Libre Baskerville', serif">Libre Baskerville</option>
+          <option value="'DM Serif Display', serif">DM Serif Display</option>
+          <option value="'Gilda Display', serif">Gilda Display</option>
+          <option value="'Della Respira', serif">Della Respira</option>
+          <option value="'Source Serif 4', serif">Source Serif 4</option>
+          <option value="'Petit Formal Script', cursive">Petit Formal Script</option>
+        </select>
+        <button class="toolbar-btn save" title="Save poem" onclick="savePoem()">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        </button>
+        <button class="toolbar-btn" title="View poem" onclick="viewCurrentPoem()">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <button class="toolbar-btn danger" title="Delete poem" onclick="confirmDelete()">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
+      </div>
+      <div class="paper-wrap">
+        <div class="paper">
+          <textarea id="poem-editor" placeholder="write your poem here…" spellcheck="false" oninput="markDirty()"></textarea>
+        </div>
+      </div>
+      <div class="edit-meta" id="edit-meta"></div>
+    </div>
+
+
+    <div id="viewer-pane">
+      <div class="viewer-toolbar toolbar">
+        <div class="viewer-title" id="viewer-title"></div>
+        <button class="toolbar-btn" title="Edit poem" onclick="editCurrentPoem()">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="toolbar-btn danger" title="Delete poem" onclick="confirmDelete()">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
+      </div>
+      <div class="viewer-wrap">
+        <div class="viewer-paper">
+          <div id="poem-display"></div>
+        </div>
+      </div>
+      <div class="viewer-meta" id="viewer-meta"></div>
+    </div>
+
+  </main>
+</div>
+
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3>Delete this poem?</h3>
+    <p>This can't be undone. The poem will vanish like a whisper.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Keep it</button>
+      <button class="btn-delete" onclick="deletePoem()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+
+</body>
+</html>
