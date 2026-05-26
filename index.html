@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Peep Poems</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=IM+Fell+English:ital@0;1&family=Playfair+Display:ital,wght@0,400;1,400&family=Lora:ital,wght@0,400;1,400&family=Crimson+Pro:ital,wght@0,300;1,300&family=Libre+Baskerville:ital@0;1&family=DM+Serif+Display:ital@0;1&family=Gilda+Display&family=Petit+Formal+Script&family=Della+Respira&family=Source+Serif+4:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
+<link href="https:
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -38,7 +38,7 @@
     overflow: hidden;
   }
 
-  /* ───── Sidebar ───── */
+  
   #sidebar {
     background: var(--white);
     border-right: 1.5px solid var(--rose-light);
@@ -169,11 +169,10 @@
     padding: 40px 20px;
     color: var(--text-muted);
     font-family: 'Cormorant Garamond', serif;
-    font-style: italic;
     font-size: 0.9rem;
   }
 
-
+  
   #main {
     overflow: hidden;
     display: flex;
@@ -181,8 +180,10 @@
     background: var(--blush);
   }
 
+  
   #main.has-pane
 
+  
   #welcome {
     display: flex;
     flex-direction: column;
@@ -207,11 +208,11 @@
 
   #welcome p {
     font-family: 'Cormorant Garamond', serif;
-    font-style: italic;
     font-size: 1rem;
     color: var(--text-muted);
   }
 
+  
   #editor-pane, #viewer-pane {
     display: none;
     flex-direction: column;
@@ -222,6 +223,7 @@
   }
   #editor-pane.active, #viewer-pane.active { display: flex; }
 
+  
   .toolbar {
     display: flex;
     align-items: center;
@@ -236,7 +238,6 @@
     flex: 1;
     font-family: 'Cormorant Garamond', serif;
     font-size: 1.15rem;
-    font-style: italic;
     color: var(--text);
     background: transparent;
     border: none;
@@ -357,6 +358,7 @@
     background: var(--blush);
   }
 
+  
   .viewer-toolbar {
     display: flex;
     align-items: center;
@@ -371,7 +373,6 @@
     flex: 1;
     font-family: 'Cormorant Garamond', serif;
     font-size: 1.2rem;
-    font-style: italic;
     color: var(--text);
   }
 
@@ -442,6 +443,7 @@
     background: var(--blush);
   }
 
+  
   .modal-overlay {
     display: none;
     position: fixed;
@@ -477,7 +479,6 @@
     font-size: 0.9rem;
     color: var(--text-muted);
     margin-bottom: 28px;
-    font-style: italic;
     line-height: 1.5;
   }
 
@@ -513,6 +514,7 @@
   }
   .btn-delete:hover { background: #c04060; }
 
+  
   #toast {
     position: fixed;
     bottom: 28px;
@@ -538,6 +540,7 @@
 
 <div id="app">
 
+  
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="logo">Peep Poems</div>
@@ -558,8 +561,10 @@
     <div id="poem-list"></div>
   </aside>
 
+  
   <main id="main">
 
+    
     <div id="welcome">
       <div class="welcome-card">
         <div class="big-logo">Peep Poems</div>
@@ -567,6 +572,7 @@
       </div>
     </div>
 
+    
     <div id="editor-pane">
       <div class="toolbar">
         <input class="toolbar-title-input" id="title-input" placeholder="untitled poem…" spellcheck="false">
@@ -601,6 +607,7 @@
       <div class="edit-meta" id="edit-meta"></div>
     </div>
 
+    
     <div id="viewer-pane">
       <div class="viewer-toolbar toolbar">
         <div class="viewer-title" id="viewer-title"></div>
@@ -637,8 +644,6 @@
 
 <script>
 
-
-
 const STORAGE_KEY = 'peep_index';
 const POEM_PREFIX = 'peep_poem_';
 
@@ -673,7 +678,6 @@ function renderList() {
 }
 
 function filterPoems(q) { searchQuery = q; renderList(); }
-
 
 function openPoem(id) {
   if (dirty && currentId && !confirm('You have unsaved changes. Discard them?')) return;
@@ -763,7 +767,6 @@ function updateEditorFont() {
   document.getElementById('poem-editor').style.fontFamily = document.getElementById('font-select').value;
   markDirty();
 }
-
 
 function showWelcome() {
   document.getElementById('welcome').style.display = 'flex';
