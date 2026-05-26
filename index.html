@@ -37,6 +37,8 @@
     height: 100vh;
     overflow: hidden;
   }
+
+  /* ───── Sidebar ───── */
   #sidebar {
     background: var(--white);
     border-right: 1.5px solid var(--rose-light);
@@ -171,7 +173,7 @@
     font-size: 0.9rem;
   }
 
- 
+
   #main {
     overflow: hidden;
     display: flex;
@@ -181,7 +183,6 @@
 
   #main.has-pane
 
-  
   #welcome {
     display: flex;
     flex-direction: column;
@@ -211,7 +212,6 @@
     color: var(--text-muted);
   }
 
-  
   #editor-pane, #viewer-pane {
     display: none;
     flex-direction: column;
@@ -280,7 +280,7 @@
   .toolbar-btn.save { background: var(--rose-ink); border-color: var(--rose-ink); color: white; }
   .toolbar-btn.save:hover { background: #b04d6a; }
 
- 
+  
   .paper-wrap {
     flex: 1;
     overflow-y: auto;
@@ -356,7 +356,6 @@
     flex-shrink: 0;
     background: var(--blush);
   }
-
 
   .viewer-toolbar {
     display: flex;
@@ -443,7 +442,6 @@
     background: var(--blush);
   }
 
-  
   .modal-overlay {
     display: none;
     position: fixed;
@@ -515,7 +513,6 @@
   }
   .btn-delete:hover { background: #c04060; }
 
- 
   #toast {
     position: fixed;
     bottom: 28px;
@@ -570,7 +567,6 @@
       </div>
     </div>
 
-   
     <div id="editor-pane">
       <div class="toolbar">
         <input class="toolbar-title-input" id="title-input" placeholder="untitled poem…" spellcheck="false">
@@ -605,7 +601,6 @@
       <div class="edit-meta" id="edit-meta"></div>
     </div>
 
-
     <div id="viewer-pane">
       <div class="viewer-toolbar toolbar">
         <div class="viewer-title" id="viewer-title"></div>
@@ -627,7 +622,6 @@
   </main>
 </div>
 
-
 <div class="modal-overlay" id="modal">
   <div class="modal">
     <h3>Delete this poem?</h3>
@@ -641,6 +635,174 @@
 
 <div id="toast"></div>
 
+<script>
 
+
+
+const STORAGE_KEY = 'peep_index';
+const POEM_PREFIX = 'peep_poem_';
+
+function getIndex() { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+function saveIndex(idx) { localStorage.setItem(STORAGE_KEY, JSON.stringify(idx)); }
+function readPoem(id) { const r = localStorage.getItem(POEM_PREFIX + id); return r ? JSON.parse(r) : null; }
+function writePoem(poem) { localStorage.setItem(POEM_PREFIX + poem.id, JSON.stringify(poem)); }
+function removePoem(id) { localStorage.removeItem(POEM_PREFIX + id); saveIndex(getIndex().filter(i => i !== id)); }
+
+let currentId = null, dirty = false, searchQuery = '';
+
+function init() { renderList(); showWelcome(); }
+
+function renderList() {
+  const poems = getIndex().map(id => readPoem(id)).filter(Boolean);
+  poems.sort((a, b) => b.updatedAt - a.updatedAt);
+  const q = searchQuery.trim().toLowerCase();
+  const filtered = q ? poems.filter(p => p.title.toLowerCase().includes(q) || p.body.toLowerCase().includes(q)) : poems;
+
+  document.getElementById('poem-count').textContent = filtered.length + (filtered.length === 1 ? ' poem' : ' poems');
+
+  const list = document.getElementById('poem-list');
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty-list">${q ? 'no poems match your search' : 'no poems yet — write one!'}</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(p => `
+    <div class="poem-item ${p.id === currentId ? 'active' : ''}" onclick="openPoem('${p.id}')">
+      <div class="poem-item-title">${escHtml(p.title || 'untitled')}</div>
+      <div class="poem-item-date">${fmtDate(p.updatedAt)}</div>
+    </div>`).join('');
+}
+
+function filterPoems(q) { searchQuery = q; renderList(); }
+
+
+function openPoem(id) {
+  if (dirty && currentId && !confirm('You have unsaved changes. Discard them?')) return;
+  currentId = id; dirty = false;
+  const poem = readPoem(id);
+  if (!poem) return;
+  showViewer(poem);
+  renderList();
+}
+
+function showViewer(poem) {
+  document.getElementById('welcome').style.display = 'none';
+  document.getElementById('editor-pane').classList.remove('active');
+  document.getElementById('viewer-pane').classList.add('active');
+
+  document.getElementById('viewer-title').textContent = poem.title || 'untitled';
+  const display = document.getElementById('poem-display');
+  display.textContent = poem.body;
+  display.style.fontFamily = poem.font || "'Cormorant Garamond', serif";
+  document.getElementById('viewer-meta').textContent = 'last edited · ' + fmtDateFull(poem.updatedAt);
+}
+
+function editCurrentPoem() {
+  if (!currentId) return;
+  const poem = readPoem(currentId);
+  if (poem) showEditor(poem);
+}
+
+function showEditor(poem) {
+  document.getElementById('welcome').style.display = 'none';
+  document.getElementById('viewer-pane').classList.remove('active');
+  document.getElementById('editor-pane').classList.add('active');
+
+  document.getElementById('title-input').value = poem.title || '';
+  document.getElementById('poem-editor').value = poem.body || '';
+
+  const fontSel = document.getElementById('font-select');
+  fontSel.value = poem.font || "'Cormorant Garamond', serif";
+  document.getElementById('poem-editor').style.fontFamily = fontSel.value;
+  document.getElementById('edit-meta').textContent = poem.updatedAt ? 'last edited · ' + fmtDateFull(poem.updatedAt) : '';
+  dirty = false;
+}
+
+function viewCurrentPoem() {
+  if (dirty) { showToast('save first ✦'); return; }
+  if (!currentId) return;
+  const poem = readPoem(currentId);
+  if (poem) showViewer(poem);
+}
+
+function newPoem() {
+  if (dirty && !confirm('Discard unsaved changes?')) return;
+  const id = 'poem_' + Date.now();
+  const poem = { id, title: '', body: '', font: "'Cormorant Garamond', serif", createdAt: Date.now(), updatedAt: Date.now() };
+  writePoem(poem);
+  const idx = getIndex(); idx.push(id); saveIndex(idx);
+  currentId = id; dirty = false;
+  showEditor(poem); renderList();
+  setTimeout(() => document.getElementById('title-input').focus(), 50);
+}
+
+function savePoem() {
+  if (!currentId) return;
+  const poem = { ...readPoem(currentId), id: currentId,
+    title: document.getElementById('title-input').value.trim() || 'untitled',
+    body:  document.getElementById('poem-editor').value,
+    font:  document.getElementById('font-select').value,
+    updatedAt: Date.now() };
+  writePoem(poem);
+  dirty = false;
+  document.getElementById('edit-meta').textContent = 'last edited · ' + fmtDateFull(poem.updatedAt);
+  renderList(); showToast('poem saved ✦');
+}
+
+function markDirty() { dirty = true; }
+
+function confirmDelete() { if (currentId) document.getElementById('modal').classList.add('open'); }
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function deletePoem() {
+  closeModal();
+  if (!currentId) return;
+  removePoem(currentId); currentId = null; dirty = false;
+  showWelcome(); renderList(); showToast('poem removed');
+}
+
+function updateEditorFont() {
+  document.getElementById('poem-editor').style.fontFamily = document.getElementById('font-select').value;
+  markDirty();
+}
+
+
+function showWelcome() {
+  document.getElementById('welcome').style.display = 'flex';
+  document.getElementById('editor-pane').classList.remove('active');
+  document.getElementById('viewer-pane').classList.remove('active');
+}
+
+function fmtDate(ts) {
+  if (!ts) return '';
+  return new Date(ts).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+function fmtDateFull(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) +
+    ' · ' + d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+}
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    if (document.getElementById('editor-pane').classList.contains('active')) savePoem();
+  }
+});
+
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+init();
+</script>
 </body>
 </html>
